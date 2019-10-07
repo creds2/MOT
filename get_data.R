@@ -2,9 +2,9 @@ library(httr)
 key = Sys.getenv("MOT_key") # get API key
 npages = 100000 #59310
 res <- list()
-
+# page fails, 6524
 pb = txtProgressBar(min = 1, max = npages, initial = 1) # Make progress bar
-for(i in 1:npages){
+for(i in 8314:npages){
   setTxtProgressBar(pb,i)
   # Request page
   req <- GET(
