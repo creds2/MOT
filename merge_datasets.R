@@ -1,64 +1,60 @@
-# merge datasets 
+library(plyr)
+library(dplyr)
 
+# load data
 path = "E:/OneDrive - University of Leeds/CREDS Data/"
+path = "E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/"
 
-main_api = readRDS(paste0(path,"MOT API/mot_history_main_1-21728.Rds"))
-main_anon = readr::read_delim(paste0(path,"MOT anoymised/test_result_2017.zip"), n_max = 10, delim = ",")
-file = "E:/OneDrive - University of Leeds/CREDS Data/MOT anoymised/test_result_2017/test_result_2017.csv"
-import_mot = function(file){
-  data <- readLines(file, n = 100000)
-  data <- strsplit(data,",")
-  lths <- lengths(data)
-  
-  data_good <- data[lths == 14]
-  data_bad <- data[lths != 14]
-  #rm(data)
-  
-  # format up the good data
-  data_good <- data.frame(matrix(unlist(data_good), ncol=14, byrow=T),stringsAsFactors=FALSE)
-  names(data_good) <- as.character(data_good[1,])
-  data_good <- data_good[2:nrow(data_good),]
-  
-  #handel the bad data
-  fix_mot <- function(sub){
-    #cols are
-    #test_id number 
-    #vehicle_id  number
-    #test_date date
-    #test_class_id number 1 digit
-    #test_type character 2 letters
-    #test_result character 1-3 letters
-    #test_mileage number
-    #postcode_area  character 2 letters        
-    #make character    
-    #model character
-    #colour character
-    #fuel_type character 2 letters
-    #cylinder_capacity number
-    # first_use_date date
-    
-    is_int <- !is.na(as.integer(sub))
-    is_date <- !is.na(lubridate::ymd(sub))
-    n_char <- nchar(sub)
-    
-    if()
-    
-    
-    
-  }
-  
-  
-}
+main_api <- readRDS(paste0(path,"MOT API/mot_history_main_1-21728.Rds"))
+main_annon <- readRDS(paste0(path,"MOT anoymised/clean/test_result_2006.Rds"))
+main_annon <- main_annon[!duplicated(main_annon$vehicle_id),]
+tests_api <- readRDS(paste0(path,"MOT API/mot_history_tests_1-21728.Rds"))
 
 
+# filter tests to 2006
+tests_2006 <- tests_api[tests_api$completedDate <= lubridate::ymd("2006-12-31"),]
+tests_2006 <- tests_2006[tests_2006$completedDate > lubridate::ymd("2005-12-31"),]
+tests_2006 <- tests_2006[!duplicated(tests_2006$registration),]
+tests_2006$miles <- ifelse(tests_2006$odometerUnit == "mi", tests_2006$odometerValue, round(tests_2006$odometerValue * 0.621371,0))
+tests_2006$test_date <- lubridate::date(tests_2006$completedDate)
+tests_2006 <- tests_2006[,c("registration","miles","test_date")]
+#summary(duplicated(tests_2006[,c("miles","test_date")]))
 
-# problem reading the data
-foo <- (1:nrow(main_anon))[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST")]
-foo2 <- main_anon[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST"),]
-main_anon2 <- readLines(con = "E:/OneDrive - University of Leeds/CREDS Data/MOT anoymised/test_result_2017/test_result_2017.csv", n = 1)
-main_anon2[13833:13836]
-main_anon2[13834]
+# about 5% of date and miles are duplicated so join to main first
+durp_reg = main_api$registration[duplicated(main_api$registration)]
+foo = main_api[main_api$registration %in% durp_reg,]
 
-# Mathc formats
-main_api$firstUsedDate <- lubridate::ymd(main_api$firstUsedDate)
+main_api <- left_join(main_api, tests_2006, by = c("registration"))
 
+
+# match formatting
+#table(main_api$fuelType)
+#table(main_annon$fuel_type)
+
+main_annon$fuel_type <- revalue(main_annon$fuel_type, 
+           c("CN" = "CNG",
+             "DI" = "Diesel",
+             "ED" = "Electric Diesel",
+             "EL" = "Electric",
+             "FC" = "Fuel Cells",
+             "GA" = "Gas",
+             "GB" = "Gas Bi-Fuel",
+             "GD" = "Gas Diesel",
+             "HY" = "Hybrid Electric (Clean)",
+             "LN" = "LNG",
+             "LP" = "LPG",
+             "OT" = "Other",
+             "PE" = "Petrol",
+             "ST" = "Steam"))
+
+main_api$colour <- toupper(main_api$colour)
+
+tmp <- main_api[1:100,]
+#tmp$primaryColour <- toupper(tmp$primaryColour)
+
+# non -unique so need test date and millage
+foo <- dplyr::left_join(tmp, main_annon, by = c("make" = "make", 
+                                                "model" = "model",
+                                                "primaryColour" = "colour",
+                                                "fuelType" = "fuel_type",
+                                                "firstUsedDate" = "first_use_date"))

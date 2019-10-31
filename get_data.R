@@ -6,13 +6,19 @@ res_tests <- list()
 res_comments <- list()
 # page fails, 4318, 4319, 4321, 4322, 4323, 10590 - 10596, 10849
 # 11867, 11868, 20308 - 20313
-fails = c(4318, 4319, 4321, 4322, 4323, 10590:10596, 10849,
-          11867, 11868, 20308:20313)
+fails = c(73002, 73004, 73053, 73055, 73153, 73155, 81587, 81588, 81593, 81608, 82121, 82127, 82133, 82312, 82324, 
+          82782, 82794, 82795, 82893, 82903, 82905, 83090, 83100)
 pb = txtProgressBar(min = 1, max = npages, initial = 1) # Make progress bar
 #gc()
-for(i in seq(21729, npages)){
-  setTxtProgressBar(pb,i)
-  #message(Sys.time()," ", i)
+#for(i in seq(70632, npages)){
+
+
+
+
+
+for(i in fails){
+  #setTxtProgressBar(pb,i)
+  message(Sys.time()," ", i)
   # Request page
   req <- try(GET(
     url = "https://beta.check-mot.service.gov.uk/trade/vehicles/mot-tests",
@@ -64,7 +70,7 @@ for(i in seq(21729, npages)){
   }
   
   
-  if(i %% 2000 == 0){
+  if(i %% 5000 == 0){
     message(paste0(Sys.time()," starting to save a backup for requests 1:",i))
     saveRDS(res_main,"F:/MOT_data/download_data_main.Rds")
     saveRDS(res_tests,"F:/MOT_data/download_data_test.Rds")
@@ -89,7 +95,9 @@ tests$testResult <- as.factor(tests$testResult)
 tests$odometerUnit <- as.factor(tests$odometerUnit)
 tests$odometerValue <- as.numeric(tests$odometerValue)
 
+#foo <- lengths(res_main[70632:98065])
+#summary(foo)
 
-saveRDS(main,"F:/MOT_data/mot_history_main_21729-xx.Rds")
-saveRDS(tests,"F:/MOT_data/mot_history_tests_21729-xx.Rds")
-saveRDS(comments,"F:/MOT_data/mot_history_comments_21729-xx.Rds")
+saveRDS(main,"F:/MOT_data/mot_history_main_70632-98065.Rds")
+saveRDS(tests,"F:/MOT_data/mot_history_tests_706312-98065.Rds")
+saveRDS(comments,"F:/MOT_data/mot_history_comments_70632-98065.Rds")
