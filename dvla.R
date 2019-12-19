@@ -3,47 +3,98 @@
 # library(rvest)
 library(RSelenium)
 
-driver <- rsDriver(browser=c("chrome"), port=4444L)
+# Tru no imagees, speed up rendering
+
+driver <- rsDriver(browser=c("chrome"), port=4447L, verbose = FALSE)
+
 remote_driver <- driver[["client"]]
 remote_driver$open()
 
 imps <- readRDS("E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/MOT API/attempt_2/part1/mot_tmp_main_btch_1.Rds")
 
-reg = imps$registration[1:10]
+reg = imps$registration[1:20]
 
 res_data = list()
 
+finder_func <- function(remote_driver, using, value, n = 5){
+  for(itr in 1:n){
+    suppressMessages({element <- try(remote_driver$findElement(using = using, value = value), silent = TRUE)})
+    if(class(element) != "try-error"){
+      return(element)
+    }else{
+      Sys.sleep(1)
+    }
+  }
+  return(element)
+}
+
+finder_yes <- function(remote_driver, using = 'id', value = 'yes-vehicle-confirm', n = 5){
+  for(itr in 1:n){
+    suppressMessages({element <- try(remote_driver$findElement(using = using, value = value), silent = TRUE)})
+    if(class(element) != "try-error"){
+      return(element)
+    }else{
+      # Might be because of bad registation
+      suppressMessages({element_error <- try(remote_driver$findElement(using = "class", value = "govuk-error-summary"), silent = TRUE)})
+      if(class(element_error) != "try-error"){
+        return(element)
+      }
+      suppressMessages({element_missing <- try(remote_driver$findElement(using = "class", value = "info-panel"), silent = TRUE)})
+      if(class(element_missing) != "try-error"){
+        element_missing_text <- element_missing$getElementText()
+        if(element_missing_text[[1]] == "Vehicle details could not be found"){
+          return(element)
+        }
+      }
+      
+      Sys.sleep(1)
+    }
+  }
+  return(element)
+}
+
+
+
 for(i in 1:length(reg)){
+  message(Sys.time()," ",i)
   
   remote_driver$navigate(url = "https://vehicleenquiry.service.gov.uk")
-  Sys.sleep(5)
+  #Sys.sleep(1)
   
-  reg_element <- remote_driver$findElement(using = 'class', value = 'govuk-input')
+  #reg_element <- try(remote_driver$findElement(using = 'class', value = 'govuk-input'), silent = TRUE)
+  reg_element <- finder_func(remote_driver, 'class', 'govuk-input')
   reg_element$sendKeysToElement(list(reg[i]))
   
-  button_element <- remote_driver$findElement(using = 'class', value = "govuk-button")
+  #button_element <- remote_driver$findElement(using = 'class', value = "govuk-button")
+  button_element <- finder_func(remote_driver, 'class', 'govuk-button')
   button_element$clickElement()
-  Sys.sleep(5)
+  #Sys.sleep(5)
   
-  yes_element <- try(remote_driver$findElement(using = 'id', value = "yes-vehicle-confirm"))
+  #yes_element <- try(remote_driver$findElement(using = 'id', value = "yes-vehicle-confirm"), silent = TRUE)
+  #yes_element <- finder_func(remote_driver, 'id', 'yes-vehicle-confirm')
+  yes_element <- finder_yes(remote_driver)
   if(class(yes_element) != "try-error"){
     yes_element$clickElement()
     
-    button_element <- remote_driver$findElement(using = 'class', value = "govuk-button")
-    button_element$clickElement()
-    Sys.sleep(5)
+    #button_element2 <- remote_driver$findElement(using = 'class', value = "govuk-button")
+    button_element2 <- finder_func(remote_driver, 'class', 'govuk-button')
+    button_element2$clickElement()
+    #Sys.sleep(5)
     
-    out <- remote_driver$findElement(using = "class", value="govuk-summary-list")
+    #out <- remote_driver$findElement(using = "class", value="govuk-summary-list")
+    out <- finder_func(remote_driver, 'class', 'govuk-summary-list')
     data <- out$getElementText()
     data <- strsplit(data[[1]], "\n", fixed = TRUE)
     data <- data[[1]]
     res_data[[i]] <- data
+    rm(button_element2, out, data)
   }
+  rm(reg_element, button_element, yes_element)
   
 }
 
-res_data2 = res_data
-res_data2 = lapplgsub("Vehicle make ","",res_data2)
+#res_data2 = res_data
+#res_data2 = lapplgsub("Vehicle make ","",res_data2)
 
 
 
