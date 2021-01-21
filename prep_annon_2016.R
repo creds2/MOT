@@ -2,6 +2,7 @@
 
 path = "E:/OneDrive - University of Leeds/CREDS Data/"
 path = "E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/"
+path = "D:/OneDrive - University of Leeds/Data/CREDS Data/"
 
 file = paste0(path,"MOT anoymised/raw/test_result_2016.txt")
 
@@ -38,8 +39,16 @@ data_fixed <- as.data.frame(data_fixed)
 names(data_fixed) <- names(data_good)
 data_fixed[] <- lapply(data_fixed, as.character)
 data_final <- rbind(data_good, data_fixed)
-saveRDS(data_final, "E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/MOT anoymised/clean/test_result_2016.Rds")
 
+data_final$test_id <- as.numeric(data_final$test_id)
+data_final$vehicle_id <- as.numeric(data_final$vehicle_id)
+data_final$test_date <- lubridate::ymd(data_final$test_date)
+data_final$test_mileage <- as.numeric(data_final$test_mileage)
+data_final$cylinder_capacity <- as.numeric(data_final$cylinder_capacity)
+data_final$first_use_date <- lubridate::ymd(data_final$first_use_date)
+
+
+saveRDS(data_final, paste0(path,"MOT anoymised/clean/test_result_2016.Rds"))
 # import_mot = function(file){
 #   data <- readLines(file, n = 100000)
 #   data <- strsplit(data,",")
@@ -84,13 +93,13 @@ saveRDS(data_final, "E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/
 
 
 
-# problem reading the data
-foo <- (1:nrow(main_anon))[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST")]
-foo2 <- main_anon[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST"),]
-main_anon2 <- readLines(con = "E:/OneDrive - University of Leeds/CREDS Data/MOT anoymised/test_result_2017/test_result_2017.csv", n = 1)
-main_anon2[13833:13836]
-main_anon2[13834]
-
-# Mathc formats
-main_api$firstUsedDate <- lubridate::ymd(main_api$firstUsedDate)
+# # problem reading the data
+# foo <- (1:nrow(main_anon))[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST")]
+# foo2 <- main_anon[!main_anon$fuel_type %in% c("DI","PE","EL","HY","OT","GB","LP","FC","ED","GD","CN","GA","LN","ST"),]
+# main_anon2 <- readLines(con = "E:/OneDrive - University of Leeds/CREDS Data/MOT anoymised/test_result_2017/test_result_2017.csv", n = 1)
+# main_anon2[13833:13836]
+# main_anon2[13834]
+# 
+# # Mathc formats
+# main_api$firstUsedDate <- lubridate::ymd(main_api$firstUsedDate)
 

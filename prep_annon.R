@@ -1,3 +1,6 @@
+# MOTE some files hav bad records see the prep_annon_20XX.R files which manaul clean those years
+
+
 library(readr)
 
 path = "E:/Users/earmmor/OneDrive - University of Leeds/CREDS Data/"
@@ -7,7 +10,7 @@ files = list.files(paste0(path,"/MOT anoymised/raw"), pattern = "result")
 
 for(i in 3:length(files)){
   message(files[i])
-  format(object.size(file), units = "Mb")
+  format(object.size(files[i]), units = "Mb")
   file = readr::read_delim(paste0(path,"MOT anoymised/raw/",files[i]), 
                            delim = "|",
                            escape_backslash = FALSE,
